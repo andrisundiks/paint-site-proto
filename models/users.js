@@ -21,4 +21,22 @@ const userSchema = new Schema({
     },
 });
 
+// Encrypt password before save using pre hook
+userSchema.pre('save', function(next) {
+    const user = this;
+    if(!user.isModified || !user.isNew) { // don't rehash if old user
+        next();
+    } else {
+        bcrypt.hash(user.password, stage.saltingRounds, function(err, hash) {
+            if(err) {
+                console.log('Error hashing password for user');
+                next(err);
+            } else {
+                user.password = hash;
+                next();
+            }
+        });
+    }
+});
+
 module.exports = mongoose.model('User', userSchema);
